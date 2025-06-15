@@ -33,9 +33,11 @@ namespace json {
         explicit Node(const char* value);
         explicit Node(std::string value);
 
-        // Добавлены конструкторы для списков инициализации
-        Node(std::initializer_list<Node> list);
-        Node(std::initializer_list<std::pair<const std::string, Node>> list);
+        // Non-explicit constructors for implicit conversions
+        Node(int value, bool is_explicit);
+        Node(double value, bool is_explicit);
+        Node(const char* value, bool is_explicit);
+        Node(std::string value, bool is_explicit);
 
         bool IsNull() const;
         bool IsArray() const;
