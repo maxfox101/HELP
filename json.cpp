@@ -10,17 +10,19 @@ using namespace std;
 namespace json {
 
 Node::Node(nullptr_t) : value_(nullptr) {}
-Node::Node(Array array) : value_(move(array)) {}
-Node::Node(Dict map) : value_(move(map)) {}
+Node::Node(Array array) : value_(std::move(array)) {}
+Node::Node(Dict map) : value_(std::move(map)) {}
 Node::Node(bool value) : value_(value) {}
 Node::Node(int value) : value_(value) {}
 Node::Node(double value) : value_(value) {}
 Node::Node(const char* value) : value_(string(value)) {}
-Node::Node(string value) : value_(move(value)) {}
+Node::Node(string value) : value_(std::move(value)) {}
 
-// Реализация новых конструкторов
-Node::Node(std::initializer_list<Node> list) : value_(Array(list)) {}
-Node::Node(std::initializer_list<std::pair<const std::string, Node>> list) : value_(Dict(list)) {}
+// Non-explicit constructors for implicit conversions
+Node::Node(int value, bool /*is_explicit*/) : value_(value) {}
+Node::Node(double value, bool /*is_explicit*/) : value_(value) {}
+Node::Node(const char* value, bool /*is_explicit*/) : value_(string(value)) {}
+Node::Node(string value, bool /*is_explicit*/) : value_(std::move(value)) {}
 
 bool Node::IsNull() const { return holds_alternative<nullptr_t>(value_); }
 bool Node::IsArray() const { return holds_alternative<Array>(value_); }
@@ -78,9 +80,9 @@ bool Node::operator==(const Dict& dict) const {
     return IsMap() && AsMap() == dict;
 }
 
-Document::Document(Node root) : root_(move(root)) {}
-Document::Document(Array array) : root_(Node(move(array))) {}
-Document::Document(Dict dict) : root_(Node(move(dict))) {}
+Document::Document(Node root) : root_(std::move(root)) {}
+Document::Document(Array array) : root_(Node(std::move(array))) {}
+Document::Document(Dict dict) : root_(Node(std::move(dict))) {}
 
 const Node& Document::GetRoot() const {
     return root_;
@@ -195,7 +197,7 @@ Node LoadArray(istream& input) {
     SkipWhitespace(input);
     if (input.peek() == ']') {
         input.get();
-        return Node(move(result));
+        return Node(std::move(result));
     }
 
     while (true) {
@@ -211,7 +213,7 @@ Node LoadArray(istream& input) {
         }
     }
 
-    return Node(move(result));
+    return Node(std::move(result));
 }
 
 Node LoadDict(istream& input) {
@@ -224,7 +226,7 @@ Node LoadDict(istream& input) {
     SkipWhitespace(input);
     if (input.peek() == '}') {
         input.get();
-        return Node(move(result));
+        return Node(std::move(result));
     }
 
     while (true) {
@@ -241,7 +243,7 @@ Node LoadDict(istream& input) {
         }
 
         SkipWhitespace(input);
-        result.emplace(move(key), LoadNode(input));
+        result.emplace(std::move(key), LoadNode(input));
         SkipWhitespace(input);
 
         char c = input.get();
@@ -252,7 +254,7 @@ Node LoadDict(istream& input) {
         }
     }
 
-    return Node(move(result));
+    return Node(std::move(result));
 }
 
 Node LoadBoolOrNull(istream& input) {
